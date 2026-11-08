@@ -166,7 +166,8 @@ window.__ModuleLoader__.load({
       '}',
       '[dir="rtl"] [data-sidebar-right-panel="fullscreen"] {',
       '  transform: none !important;',
-      '  max-width: 100vw !important;',
+      // Keep DSH's own width cap: it reserves the main sidebar, so fullscreen
+      // covers only the content area exactly like the LTR layout.
       '}',
       '[dir="rtl"] [data-sidebar-right-panel][data-sidebar-right-open] [data-dockkit-host="dock"],',
       '[dir="rtl"] [data-sidebar-right-panel][data-sidebar-right-open] [data-dockkit-divider] {',
