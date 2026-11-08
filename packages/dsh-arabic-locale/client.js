@@ -482,7 +482,15 @@ window.__ModuleLoader__.load({
           if (!en) continue;
           const ar = {};
           for (const key of Object.keys(en)) {
-            const arabic = AR[en[key]];
+            const source = en[key];
+            let arabic = AR[source];
+            if (typeof arabic !== 'string') {
+              // Many shipped strings pad with spaces for concatenation
+              // ("Completed in ", "Search   "). Translate the trimmed text and
+              // re-append the padding so spacing is preserved.
+              const padded = /^(.*?)(\s+)$/s.exec(source);
+              if (padded && typeof AR[padded[1]] === 'string') arabic = AR[padded[1]] + padded[2];
+            }
             if (typeof arabic === 'string') ar[key] = arabic;
           }
           if (Object.keys(ar).length === 0) continue;
