@@ -213,7 +213,44 @@ Evidence before claiming success:
 
 ---
 
-## 9. Working agreement
+## 9. RTL override inventory (DSH 0.2.2-rc.1)
+
+Every rule below is scoped to `[dir="rtl"]` unless stated; the splitter sheet is
+direction-independent on purpose. Keep this table in sync when you add a rule.
+
+| Selector | Why |
+|---|---|
+| `pre, code, kbd, samp, var, .katex, .monaco-editor, .xterm` (+ shiki/codeBlock/terminal/documentPreview/filePath/pathText classes) | LTR islands |
+| `:where(p, li, dt, dd, td, th, label, small, strong, em, figcaption, summary, blockquote, caption, div, span)` → `unicode-bidi: plaintext` | Keep English punctuation on the correct side |
+| `[style*="margin-left: auto"]` / `[style*="margin-right: auto"]` | Inline physical auto margins |
+| `[class*="_rowActions"], [class*="_headerActions"], [class*="_footerActions"], [class*="_actions"], [class*="_trailing"]` | Groups pinned with a physical auto margin |
+| `.GRgSLq_*` (composer: `trailing`, `input`, `placeholder`, `select`, `scroll`, `retry`) | Composer toolbar and editor insets |
+| `[class*="_navCell"]`, `[class*="_cardOpen"]`, `[class*="_groupToggle"]`, `[class*="_optionLabel"]`, `[class*="_itemLabel"]`, `[role="menuitem"]` | Hardcoded `text-align: left` |
+| `[role="menu"][class*="_list"]` → `min-width` / `max-width` | Anchored width is computed for the LTR side |
+| `[role="menu"]` → `z-index: 2000` | Menus ship at 100 and get covered by panel layers |
+| `[data-sidebar-right-panel]` → `left: 0` | Panel is pinned with `right: 0`; it docks left in RTL |
+| `[data-sidebar-right-panel="fullscreen"]` → `transform: none` | Slide-in uses a positive `translateX` |
+| `[data-sidebar-right-panel][data-sidebar-right-open] [data-dockkit-host="dock"]` | Keep the open dock visible |
+| `[data-side="rightbar"], [data-side="leftbar"], [data-width-handle]` (direction-independent) | Draw a visible splitter line over invisible 8px handles |
+
+Runtime helpers in `packages/dsh-rtl-layout/client.js` (these replace CSS
+positioning, which kept breaking popups):
+
+- `clampPopup()` — promotes absolutely positioned menus/dialogs to `fixed` at
+  their current rect (escapes clipping columns such as `mP3x-q_centerCol`), widens
+  them from the widest `_itemLabel` content, then nudges them inside the viewport.
+- `positionRightbarHandle()` — derives the resize handle's `left` from the panel
+  rect instead of the app's LTR offset.
+- `MutationObserver` on `body` (childList + `style`/`data-sidebar-right-*`
+  attributes) plus pointer/key listeners, all throttled by rAF/60 ms.
+
+Empirical rule: **measure before overriding.** Two long debugging rounds were
+caused by guessing; the final fixes came from `getBoundingClientRect()`,
+`elementFromPoint()` and computed styles read in the running app.
+
+---
+
+## 10. Working agreement
 
 1. Read `HANDOFF.md`, `docs/DECISIONS.md`, and this file before editing.
 2. Keep the two bundles independent: a failure in one must not affect the other.

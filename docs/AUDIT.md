@@ -33,3 +33,22 @@ These elements **MUST NOT** be flipped. They will be wrapped in `dir="ltr"` or g
 The existing plugin handles per-paragraph `dir="auto"`. 
 - **Scenario:** Root `dir="rtl"` + Paragraph `dir="auto"`.
 - **Result:** The layout is Arabic/RTL, but an English paragraph inside the chat will still align left. This is the desired professional behavior.
+
+## 5. Applied overrides (Phase 2 result, DSH 0.2.2-rc.1)
+
+Every fix below was measured in the running app before being applied; see
+`AGENTS.md` §9 for the maintained inventory.
+
+| Area | Shipped behaviour | RTL correction |
+|---|---|---|
+| Composer toolbar | `.GRgSLq_trailing { margin-left: auto }` | swap auto margin; mirror editor padding, placeholder inset, select chevron |
+| Settings navigation | `.AnXs9G_navCell { text-align: left; padding: 9px 16px 9px 12px }` | `text-align: start` + mirrored padding |
+| Settings header actions | `.AnXs9G_actions { margin-left: auto }` | swap auto margin |
+| Menus | `right: 0` anchor inside the chat column, which clips overflow | keep shipped anchor, promote to `fixed` at the measured rect, widen from the widest label, clamp to viewport, `z-index: 2000` |
+| Right sidebar panel | `right: 0` + `translateX(+width)` slide | dock left, invert the slide, keep the shipped `max-width` so the main sidebar stays visible |
+| Sidebar resize handle | `left` computed in JS for the LTR side | recompute from the panel rect on dock/resize/drag |
+| Width + sidebar handles | invisible 8px hit areas | 3px themed splitter line, 4px accent on hover/drag, both directions |
+
+**Fullscreen right sidebar:** covers the content area by design (DSH behaviour);
+the main sidebar remains visible, matching the English layout.
+
