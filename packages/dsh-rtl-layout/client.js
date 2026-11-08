@@ -213,10 +213,24 @@ window.__ModuleLoader__.load({
       if (element.getClientRects().length === 0) return;
       const rect = element.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
-      // A menu whose content is wider than its box clips its own labels (the
-      // anchored max-width is computed for the LTR side). Widen it to its
-      // content, capped by the viewport, before measuring the position.
       const maxWidth = window.innerWidth - 2 * VIEWPORT_MARGIN;
+      // A menu whose content is wider than its box clips its own labels (the
+      // anchored max-width is computed for the LTR side). Measure the widest
+      // visible label — not the menu's scrollWidth, which already reflects the
+      // clipped boxes — and widen the menu to fit it.
+      const labels = element.querySelectorAll('[class*="_itemLabel"], [class*="_optionLabel"], [class*="_tabTitle"]');
+      let widestLabel = 0;
+      for (const label of labels) widestLabel = Math.max(widestLabel, label.scrollWidth);
+      if (widestLabel > 0) {
+        const style = getComputedStyle(element);
+        const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+        // Icon cell + gaps + item padding inside the row.
+        const chrome = 56;
+        const needed = Math.min(widestLabel + padding + chrome, maxWidth);
+        if (needed > rect.width + 1) {
+          element.style.setProperty('min-width', `${Math.ceil(needed)}px`, 'important');
+        }
+      }
       if (element.scrollWidth > rect.width + 1) {
         element.style.setProperty('min-width', `${Math.min(element.scrollWidth, maxWidth)}px`, 'important');
       }
