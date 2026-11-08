@@ -155,6 +155,27 @@ window.__ModuleLoader__.load({
       '  left: auto !important;',
       '  right: calc(100% + 10px) !important;',
       '}',
+      // --- Right sidebar panel (docks on the left in RTL) --------------------
+      // `.acoR2W_panel` is pinned with `right: 0` and slides with a positive
+      // `translateX(--dsh-sidebar-width)`. In RTL the panel docks on the left
+      // edge and slides in from the left, otherwise it lands half off-screen
+      // (its chrome buttons included) and cannot be closed again.
+      '[dir="rtl"] [data-sidebar-right-panel] {',
+      '  right: auto !important;',
+      '  left: 0 !important;',
+      '}',
+      '[dir="rtl"] [data-sidebar-right-panel="fullscreen"] {',
+      '  transform: none !important;',
+      '  max-width: 100vw !important;',
+      '}',
+      '[dir="rtl"] [data-sidebar-right-panel][data-sidebar-right-open] [data-dockkit-host="dock"],',
+      '[dir="rtl"] [data-sidebar-right-panel][data-sidebar-right-open] [data-dockkit-divider] {',
+      '  transform: none !important;',
+      '  visibility: visible !important;',
+      '}',
+      '[dir="rtl"] [data-sidebar-right-panel]:not([data-sidebar-right-open]) [data-dockkit-host="dock"] {',
+      '  transform: translateX(calc(-1 * var(--dsh-sidebar-width))) !important;',
+      '}',
       // Slightly looser leading for Arabic script.
       '[dir="rtl"] body {',
       '  line-height: 1.7;',
