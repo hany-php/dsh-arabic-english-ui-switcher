@@ -135,11 +135,10 @@ window.__ModuleLoader__.load({
       '}',
       // --- Menu primitives (dropdowns, context menus) ------------------------
       // `_alignEnd` pins a menu to the anchor's right edge with physical
-      // properties; in RTL the logical end is the left edge, and `_list` already
-      // anchors with `left: 0`. Both selectors below therefore agree on the same
-      // values, so the anchor box grows to the right instead of overflowing the
-      // left screen edge (the menu lives inside a tiny `_root` span).
-      'html[dir="rtl"] [class*="_alignEnd"],',
+      // properties; in RTL it must anchor to the left instead. Scope these rules
+      // to `[role="menu"]` only: the same primitive classes are used by panels
+      // and popovers, and a broader selector moved them off-screen.
+      'html[dir="rtl"] [role="menu"][class*="_alignEnd"],',
       'html[dir="rtl"] [role="menu"][class*="_list"] {',
       '  left: 0 !important;',
       '  right: auto !important;',
@@ -151,15 +150,10 @@ window.__ModuleLoader__.load({
       // The menu width comes from `--dsh-anchored-max-width`, computed for the
       // LTR anchor side; in RTL it can collapse far below the content width and
       // clip every label. Size RTL menus to their content instead.
-      '[dir="rtl"] [role="menu"] {',
+      '[dir="rtl"] [role="menu"][class*="_list"] {',
       '  width: max-content !important;',
       '  min-width: min(160px, calc(100vw - 24px)) !important;',
       '  max-width: min(360px, calc(100vw - 24px)) !important;',
-      '}',
-      // The menu is rendered inside the tiny anchor span; never let that anchor
-      // clip the popup.
-      'html[dir="rtl"] :has(> [role="menu"]) {',
-      '  overflow: visible !important;',
       '}',
       // Submenus open to the right in LTR; mirror the offset in RTL.
       '[dir="rtl"] [class*="_submenu"] {',
