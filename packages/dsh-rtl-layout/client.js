@@ -270,6 +270,22 @@ window.__ModuleLoader__.load({
       for (const element of document.querySelectorAll('[role="menu"], [role="dialog"]')) clampPopup(element);
     }
 
+    /**
+     * Keep the right sidebar's resize handle on the panel edge in RTL.
+     * The app positions `[data-side="rightbar"]` with a left offset computed for
+     * the LTR layout (panel pinned right); after the panel docks left, that
+     * offset leaves the handle detached from the panel.
+     */
+    function positionRightbarHandle() {
+      const panel = document.querySelector('[data-sidebar-right-panel]');
+      const handle = document.querySelector('[data-side="rightbar"]');
+      if (panel === null || handle === null) return;
+      const rect = panel.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      handle.style.setProperty('left', `${Math.round(rect.right) - 4}px`, 'important');
+      handle.style.setProperty('margin-left', '0', 'important');
+    }
+
     return {
       inject: ['locale'],
       apply(ctx) {
@@ -282,7 +298,10 @@ window.__ModuleLoader__.load({
         let applied = false;
         let observer = null;
 
-        const onResize = () => clampAll();
+        const onResize = () => {
+          clampAll();
+          positionRightbarHandle();
+        };
 
         // Menus may be mounted once and toggled with CSS/aria state, which the
         // childList observer never sees. Re-measure on the interactions that can
@@ -293,6 +312,7 @@ window.__ModuleLoader__.load({
           clampTimer = setTimeout(() => {
             clampTimer = null;
             clampAll();
+            positionRightbarHandle();
           }, 60);
         };
 
@@ -315,8 +335,10 @@ window.__ModuleLoader__.load({
                 if (inner.length > 0) requestAnimationFrame(() => inner.forEach(settle));
               }
             }
+            // Panel width changes (docking, dragging) move the resize handle.
+            requestAnimationFrame(positionRightbarHandle);
           });
-          observer.observe(document.body, { childList: true, subtree: true });
+          observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'data-sidebar-right-panel', 'data-sidebar-right-open'] });
           window.addEventListener('resize', onResize);
           document.addEventListener('pointerdown', scheduleClampAll, true);
           document.addEventListener('keydown', scheduleClampAll, true);
@@ -357,6 +379,7 @@ window.__ModuleLoader__.load({
           root.setAttribute(ROOT_FLAG, 'on');
           applied = true;
           startWatch();
+          requestAnimationFrame(positionRightbarHandle);
         };
 
         const disable = () => {
