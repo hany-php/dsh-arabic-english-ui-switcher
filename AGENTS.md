@@ -180,13 +180,36 @@ Evidence before claiming success:
 
 - `grep`, `glob`, and shell commands **cannot read inside `app.asar`** (native
   tools fail with "path not found"). Use the `read` tool, or read the archive as
-  a byte buffer in Node (see `tools/extract-locale-corpus.cjs`).
+  a byte buffer in Node (see `tools/extract-locale-corpus.js`).
 - `ctx.locale.register(ns, locale, dict)` **throws** if `(ns, locale)` is already
   registered. Always check `locales.has('ar')` first.
 - `addLanguage` **throws** if the id is taken, the label is empty, or the fallback
   is unknown or creates a cycle. English is the only terminal fallback.
 - Hook/plugin order matters: declare `inject: ['locale']` so activation waits for
   the service instead of reading it too early.
+- When scanning the asar from Node, use `indexOf` loops with a byte cursor.
+  Regexes with nested quantifiers over the 300 MB buffer can hang for minutes.
+
+### CSS override rules learned the hard way
+
+1. **Never target a bare primitive class.** The menu primitives (`_alignEnd`,
+   `_list`, `_trailing`, `_actions`, `_submenu`) are reused by panels, popovers and
+   page chrome. Scope every rule with a structural anchor such as
+   `[role="menu"]` or `[data-sidebar-right-panel]`.
+2. **Never use `:has(> [role="menu"]) { overflow: visible }`.** It matches layout
+   wrappers and broke the fullscreen right sidebar.
+3. **Do not override `left`/`right` of a menu.** DSH anchors menus itself; forcing
+   an edge detaches the language picker, account card and session menu from their
+   triggers. Let the shipped placement stand and clamp overflow in JS instead
+   (`clampPopup()` in the RTL client).
+4. Prefer CSS-module **suffix** selectors (`[class*="_navCell"]`) over full hashes:
+   the readable suffix survives rebuilds.
+5. Physical properties to mirror in RTL: `text-align`, `left`/`right`,
+   `margin-left/right`, `padding-left/right`, `inset`, `translateX`, `order`,
+   `background-position`, and `float`.
+6. Prefer `data-*` hooks that the app already exposes
+   (`data-sidebar-right-panel`, `data-sidebar-right-open`, `data-dockkit-*`) — they
+   are part of the DOM contract and survive CSS-hash changes.
 
 ---
 
