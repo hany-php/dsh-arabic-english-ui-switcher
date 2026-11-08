@@ -404,6 +404,35 @@ window.__ModuleLoader__.load({
       'Help improve DeepSeek models and products': 'ساعد في تحسين نماذج ومنتجات DeepSeek',
       'Version {version}': 'الإصدار {version}',
       'Current version: {version}': 'الإصدار الحالي: {version}',
+
+      // --- command menu (slash / plus) --------------------------------------
+      Commands: 'الأوامر',
+      Goal: 'الهدف',
+      Plan: 'الخطة',
+      Feedback: 'الملاحظات',
+      Export: 'تصدير',
+      File: 'ملف',
+      'Set or view the goal for a long-running task':
+        'حدّد هدفًا لمهمة طويلة أو اعرض الهدف الحالي',
+      'Enter or leave plan mode': 'الدخول إلى وضع الخطة أو الخروج منه',
+      'Record feedback about this session': 'تسجيل ملاحظات حول هذه الجلسة',
+      'Compact older conversation history': 'ضغط سجل المحادثة الأقدم',
+      'Switch the permission preset (sandbox mode + approval policy)':
+        'تبديل إعداد الصلاحيات المسبق (وضع العزل + سياسة الموافقة)',
+      'Select the model for this conversation': 'اختيار النموذج لهذه المحادثة',
+      'Download this Session log as a ZIP archive':
+        'تنزيل سجل هذه الجلسة كأرشيف ZIP',
+      'Message or run a task, / commands, @ files or sessions':
+        'اكتب رسالة أو نفّذ مهمة، أو / للأوامر و@ للملفات أو الجلسات',
+      'No matching commands': 'لا توجد أوامر مطابقة',
+      'Search commands': 'بحث في الأوامر',
+      'Filter options': 'تصفية الخيارات',
+      'No options': 'لا توجد خيارات',
+      Applying: 'جارٍ التطبيق',
+      '/{command} options': 'خيارات /{command}',
+      '/{command} matches': 'مطابقات /{command}',
+      '/{command} does not accept attachments; remove them first':
+        '/{command} لا يقبل المرفقات؛ أزلها أولًا',
     };
 
     /** Minimal explicit dictionary used only when the runtime scan is unavailable. */
