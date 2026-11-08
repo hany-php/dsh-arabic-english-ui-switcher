@@ -143,6 +143,12 @@ window.__ModuleLoader__.load({
       '[dir="rtl"] [role="menuitem"] {',
       '  text-align: start !important;',
       '}',
+      // Menus ship with `z-index: 100`, which the fullscreen right sidebar
+      // paints over (verified with elementFromPoint). Lift popups above the
+      // panel layers (`--dsh-dockkit-*-layer` stay below 100).
+      '[dir="rtl"] [role="menu"] {',
+      '  z-index: 2000 !important;',
+      '}',
       // The menu width comes from `--dsh-anchored-max-width`, computed for the
       // LTR anchor side; in RTL it can collapse far below the content width and
       // clip every label.
