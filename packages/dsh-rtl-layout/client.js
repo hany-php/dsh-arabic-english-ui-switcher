@@ -134,16 +134,15 @@ window.__ModuleLoader__.load({
       '  margin-right: auto !important;',
       '}',
       // --- Menu primitives (dropdowns, context menus) ------------------------
-      // `_alignEnd` pins a menu to the anchor's right edge and `_list` pins it
-      // to the left edge with physical properties; in RTL both must swap so the
-      // menu stays inside the viewport.
+      // `_alignEnd` pins a menu to the anchor's right edge with physical
+      // properties; in RTL the logical end is the left edge. Do NOT touch
+      // `_list` here: it already sets `left: 0` and a rule with higher
+      // specificity would win over `_alignEnd` and push the menu off-screen.
       '[dir="rtl"] [class*="_alignEnd"] {',
       '  right: auto !important;',
       '  left: 0 !important;',
-      '}',
-      '[dir="rtl"] [role="menu"][class*="_list"] {',
-      '  left: auto !important;',
-      '  right: 0 !important;',
+      '  inset-inline-start: 0 !important;',
+      '  inset-inline-end: auto !important;',
       '}',
       // Menu rows hardcode `text-align: left`.
       '[dir="rtl"] [role="menuitem"] {',
