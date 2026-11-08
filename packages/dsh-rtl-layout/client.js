@@ -77,10 +77,42 @@ window.__ModuleLoader__.load({
       '  margin-left: 0 !important;',
       '  margin-right: auto !important;',
       '}',
-      // Composer placeholder is positioned with physical insets; mirror it.
-      // (Class hash comes from DSH 0.2.2-rc.1; guarded by the attribute match.)
+      // --- Composer (DSH 0.2.2-rc.1 custom properties are physical) ---------
+      // The trailing group (submit + model + permission + add) is pinned with a
+      // physical `margin-left: auto`; in RTL it must be pinned to the left edge
+      // by the opposite auto margin, otherwise the whole group floats right and
+      // the submit button appears in the middle of the card.
+      '[dir="rtl"] [class*="GRgSLq_trailing"] {',
+      '  margin-left: 0 !important;',
+      '  margin-right: auto !important;',
+      '}',
+      '[dir="rtl"] [class*="GRgSLq_trailingActive"] {',
+      '  margin-right: 0 !important;',
+      '}',
+      // Editor padding, placeholder inset and the select chevron are physical.
+      '[dir="rtl"] [class*="GRgSLq_input"] {',
+      '  padding: 4px 14px 0 8px !important;',
+      '}',
       '[dir="rtl"] [class*="GRgSLq_placeholder"] {',
       '  inset: 4px 14px auto 8px !important;',
+      '}',
+      '[dir="rtl"] [class*="GRgSLq_select"] {',
+      '  background-position: left 4px center !important;',
+      '  padding: 0 8px 0 20px !important;',
+      '}',
+      '[dir="rtl"] [class*="GRgSLq_scroll"] {',
+      '  margin-right: 0 !important;',
+      '  margin-left: 4px !important;',
+      '}',
+      '[dir="rtl"] [class*="GRgSLq_retry"] {',
+      '  margin-left: 0 !important;',
+      '  margin-right: 8px !important;',
+      '}',
+      // Hash-independent fallback: CSS-module class names keep their readable
+      // suffix, so the same LTR idiom is corrected in other modules too.
+      '[dir="rtl"] [class*="_trailing"]:not([class*="_trailingActive"]) {',
+      '  margin-left: 0 !important;',
+      '  margin-right: auto !important;',
       '}',
       // Slightly looser leading for Arabic script.
       '[dir="rtl"] body {',
