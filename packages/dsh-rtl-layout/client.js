@@ -148,6 +148,14 @@ window.__ModuleLoader__.load({
       '[dir="rtl"] [role="menuitem"] {',
       '  text-align: start !important;',
       '}',
+      // The menu width comes from `--dsh-anchored-max-width`, computed for the
+      // LTR anchor side; in RTL it can collapse far below the content width and
+      // clip every label. Size RTL menus to their content instead.
+      '[dir="rtl"] [role="menu"] {',
+      '  width: max-content !important;',
+      '  min-width: min(160px, calc(100vw - 24px)) !important;',
+      '  max-width: min(360px, calc(100vw - 24px)) !important;',
+      '}',
       // Submenus open to the right in LTR; mirror the offset in RTL.
       '[dir="rtl"] [class*="_submenu"] {',
       '  left: auto !important;',
