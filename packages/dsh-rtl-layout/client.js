@@ -220,6 +220,19 @@ window.__ModuleLoader__.load({
       const rect = element.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
       const maxWidth = window.innerWidth - 2 * VIEWPORT_MARGIN;
+      // The chat column clips its overflow (`an3WzG_root`, `mP3x-q_centerCol`),
+      // and an absolutely positioned menu that extends past that column is cut
+      // in half. Promote it to fixed at its current visual position so it
+      // escapes every clipping ancestor, then clamp it into the viewport.
+      if (getComputedStyle(element).position === 'absolute' && element.dataset.dshRtlFixed !== '1') {
+        element.dataset.dshRtlFixed = '1';
+        element.style.setProperty('position', 'fixed', 'important');
+        element.style.setProperty('left', `${Math.round(rect.left)}px`, 'important');
+        element.style.setProperty('top', `${Math.round(rect.top)}px`, 'important');
+        element.style.setProperty('right', 'auto', 'important');
+        element.style.setProperty('bottom', 'auto', 'important');
+        element.style.setProperty('margin', '0', 'important');
+      }
       // A menu whose content is wider than its box clips its own labels (the
       // anchored max-width is computed for the LTR side). Measure the widest
       // visible label — not the menu's scrollWidth, which already reflects the
@@ -323,10 +336,17 @@ window.__ModuleLoader__.load({
           document.removeEventListener('pointerdown', scheduleClampAll, true);
           document.removeEventListener('keydown', scheduleClampAll, true);
           document.removeEventListener('pointerup', scheduleClampAll, true);
-          for (const element of document.querySelectorAll('[data-dsh-rtl-clamp]')) {
+          for (const element of document.querySelectorAll('[data-dsh-rtl-clamp], [data-dsh-rtl-fixed]')) {
             element.style.removeProperty('transform');
             element.style.removeProperty('min-width');
+            element.style.removeProperty('position');
+            element.style.removeProperty('left');
+            element.style.removeProperty('top');
+            element.style.removeProperty('right');
+            element.style.removeProperty('bottom');
+            element.style.removeProperty('margin');
             delete element.dataset.dshRtlClamp;
+            delete element.dataset.dshRtlFixed;
           }
         };
 
