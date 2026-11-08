@@ -21,7 +21,8 @@ tools, `app.asar`, or native modules.
 **Status (2026-11-08):** Phase 1, Phase 2 and Phase 3 are implemented and
 installed in the `desktop` profile. Phase 3 replaced the hand-written coverage
 list with a generated dictionary harvest from `app.asar` and expanded Arabic
-coverage to every mounted client bundle (1,650 new entries). Phase 4
+coverage to every mounted client bundle (1,790 new entries across the first pass
+and a follow-up extractor fix for the preset-guide dictionaries). Phase 4
 (documentation, visual checklist, tagged release) is the next open work item.
 
 ---
@@ -61,7 +62,7 @@ packages/
 tools/
   asar-util.cjs               read-only asar list/read/grep (header parser)
   extract-locale-corpus.cjs   harvests every English dictionary literal from app.asar
-  locale-en-corpus.json       2936 unique English strings found in 0.2.2-rc.1
+  locale-en-corpus.json       3128 unique English strings found in 0.2.2-rc.1
   locale-dicts-all.json       per-bundle English dictionaries (key -> English)
   locale-dicts-settings.json  Phase 1 settings-area extract (kept for reference)
   loaded-bundles.cjs          which client bundles the desktop profile mounts
@@ -205,6 +206,12 @@ Evidence before claiming success:
   (e.g. `<app>\resources\app.asar\dsh\desktop-runtime.json`); for discovery use
   `tools/asar-util.cjs` (`list` / `read` / `grep`), which parses the archive
   header directly instead of loading the 300 MB buffer.
+- Client dictionaries are not all named `en`: some are `guideEn`, `accessEn`,
+  `frequencyEn`, `onboardingEn`, `zoomEn` or generated `en$1`, some are spread
+  into `en` (`const en = { ...guideEn, … }`), and some values are arrays joined
+  with `.join("\n\n")`. `tools/extract-locale-corpus.cjs` handles all of those;
+  if a dialog is still English after a coverage pass, check the bundle for a
+  dictionary shape the harvester missed before assuming the text is data.
 - `ctx.locale.register(ns, locale, dict)` **throws** if `(ns, locale)` is already
   registered. Always check `locales.has('ar')` first.
 - `addLanguage` **throws** if the id is taken, the label is empty, or the fallback

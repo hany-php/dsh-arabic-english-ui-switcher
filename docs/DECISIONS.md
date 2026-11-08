@@ -53,6 +53,14 @@ table, merged at activation with `Object.assign`.
 - **Identifiers stay English:** tool names, slash commands, units, formats and
   protocol names are deliberately excluded from batches and fall back to English
   (listed in `docs/INVENTORY.md` §5).
+- **Harvest every dictionary shape:** the shipped bundles are not uniform. Some
+  dictionaries are named `en`, others `guideEn` / `accessEn` / `frequencyEn` /
+  `onboardingEn` / `zoomEn` or generated `en$N`; some are spread into `en`
+  (`const en = { ...guideEn, … }`); some values are arrays joined with
+  `.join("\n\n")`. The harvester resolves all of these — an earlier version that
+  only matched `const en = {` left the agent-preset guide dialog English, which
+  the user caught after the first install. Any future "still English" report
+  should first re-check the extractor's dictionary coverage.
 - **Batch translation with mechanical validation:** `tools/locale-batch.cjs`
   splits the gaps into area batches; `tools/check-translation-part.cjs` enforces
   placeholder/whitespace/no-zero-width invariants before a batch can be merged.

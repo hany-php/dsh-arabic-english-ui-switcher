@@ -27,10 +27,10 @@ DeepSeek Harness لا يوفّر لغة عربية ولا وضع RTL. هذا ا�
 4. يحدث مسح إضافي بعد 120ms عند كل تغيير في اللغة، لتغطية الإضافات التي تُحمَّل متأخرة.
 
 **تغطية المرحلة 3:** استُخرجت القواميس الإنجليزية الفعلية من `app.asar`
-(‏2,936 نصًا فريدًا)، وتمت تغطية الحزم التي يشغّلها بروفايل `desktop` فعلًا
-(‏2,077 نصًا): صار **1,997 نصًا مترجمًا**، ولم يتبقَّ سوى **80 رمزًا تقنيًا**
-(أسماء أدوات، أوامر شرطة مائلة، وحدات، صيغ تواريخ، روابط) تُركت إنجليزية
-بالتصميم. الحزم التجريبية غير المُحمَّلة تبقى إنجليزية حتى تفعيلها.
+(‏3,128 نصًا فريدًا)، وتمت تغطية الحزم التي يشغّلها بروفايل `desktop` فعلًا
+(‏2,258 نصًا): صار **2,139 نصًا مترجمًا**، ولم يتبقَّ سوى **119 رمزًا تقنيًا**
+(أسماء أدوات، أوامر شرطة مائلة، وحدات، صيغ تواريخ، روابط، أسماء تطبيقات) تُركت
+إنجليزية بالتصميم. الحزم التجريبية غير المُحمَّلة تبقى إنجليزية حتى تفعيلها.
 التفاصيل وخطوات إعادة التوليد في
 [docs/INVENTORY.md](docs/INVENTORY.md).
 
@@ -65,7 +65,7 @@ tools/                    أدوات قراءة app.asar + توليد القوا
 - **المرحلة 0** — مكتملة (جرد وتدقيق وقرارات).
 - **المرحلة 1** — منفّذة: العربية ظاهرة وتُترجم الإعدادات والنماذج والإضافات وقائمة الأوامر وقائمة الجلسة.
 - **المرحلة 2** — منفّذة: الاتجاه يتبع اللغة تلقائيًا، جزر LTR سليمة، صندوق الكتابة والقوائم والأعمدة ومقابض التوسيع مضبوطة.
-- **المرحلة 3** — منفّذة ومثبّتة: تغطية كاملة للحزم المُحمَّلة (1,650 ترجمة جديدة)، مع أدوات استخراج/توليد/تحقق قابلة لإعادة التشغيل بعد أي تحديث لـ DSH، ومراجعة QA مستقلة.
+- **المرحلة 3** — منفّذة ومثبّتة: تغطية كاملة للحزم المُحمَّلة (1,790 ترجمة جديدة على دفعتين، بما فيها أدلة الإعدادات المسبقة)، مع أدوات استخراج/توليد/تحقق قابلة لإعادة التشغيل بعد أي تحديث لـ DSH، ومراجعة QA مستقلة.
 - **المرحلة 4 (قادمة)** — توثيق نهائي، قائمة فحص بصرية من المستخدم، وإصدار موسوم.
 
 ### حدود معروفة
@@ -92,12 +92,12 @@ DeepSeek Harness ships no Arabic UI and no RTL mode. This project adds both as *
 4. A throttled re-scan (120 ms) on every locale revision covers plugins that activate later.
 
 **Phase 3 coverage:** the actual English dictionaries were harvested from
-`app.asar` (2,936 unique strings) and every bundle mounted by the `desktop`
-profile is covered (2,077 strings): **1,997 translated**, leaving only **80
-technical tokens** (tool names, slash commands, units, formats, URLs) English by
-design. Unmounted experimental bundles stay English until enabled. The reusable
-harvest → batch → validate → merge pipeline lives in `tools/` and is documented
-in [docs/INVENTORY.md](docs/INVENTORY.md).
+`app.asar` (3,128 unique strings) and every bundle mounted by the `desktop`
+profile is covered (2,258 strings): **2,139 translated**, leaving only **119
+technical tokens** (tool names, slash commands, units, formats, URLs, application
+names) English by design. Unmounted experimental bundles stay English until
+enabled. The reusable harvest → batch → validate → merge pipeline lives in
+`tools/` and is documented in [docs/INVENTORY.md](docs/INVENTORY.md).
 
 ### How direction works
 - Direction derives from the active locale (`ar/he/fa/ur` → RTL, everything else → LTR), so the persisted language preference also persists the direction.
