@@ -108,8 +108,27 @@ window.__ModuleLoader__.load({
       '  margin-left: 0 !important;',
       '  margin-right: 8px !important;',
       '}',
-      // Hash-independent fallback: CSS-module class names keep their readable
-      // suffix, so the same LTR idiom is corrected in other modules too.
+      // --- Settings shell and menu rows -------------------------------------
+      // `.AnXs9G_navCell` in DSH 0.2.2-rc.1 hardcodes `text-align: left` and a
+      // physical padding, which pins the settings navigation labels to the far
+      // side of their row in RTL.
+      '[dir="rtl"] [class*="_navCell"] {',
+      '  text-align: start !important;',
+      '  padding: 9px 12px 9px 16px !important;',
+      '}',
+      // Menu/card rows that hardcode `text-align: left`.
+      '[dir="rtl"] [class*="_cardOpen"],',
+      '[dir="rtl"] [class*="_groupToggle"],',
+      '[dir="rtl"] [class*="_optionLabel"],',
+      '[dir="rtl"] [class*="_itemLabel"] {',
+      '  text-align: start !important;',
+      '}',
+      // Action groups pinned to the right edge with a physical auto margin.
+      '[dir="rtl"] [class*="_actions"] {',
+      '  margin-left: 0 !important;',
+      '  margin-right: auto !important;',
+      '}',
+      // Hash-independent fallback for the same LTR idiom in other modules.
       '[dir="rtl"] [class*="_trailing"]:not([class*="_trailingActive"]) {',
       '  margin-left: 0 !important;',
       '  margin-right: auto !important;',
