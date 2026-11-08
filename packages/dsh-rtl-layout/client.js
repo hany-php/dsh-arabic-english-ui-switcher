@@ -251,6 +251,18 @@ window.__ModuleLoader__.load({
 
         const onResize = () => clampAll();
 
+        // Menus may be mounted once and toggled with CSS/aria state, which the
+        // childList observer never sees. Re-measure on the interactions that can
+        // open one.
+        let clampTimer = null;
+        const scheduleClampAll = () => {
+          if (clampTimer !== null) clearTimeout(clampTimer);
+          clampTimer = setTimeout(() => {
+            clampTimer = null;
+            clampAll();
+          }, 60);
+        };
+
         const startWatch = () => {
           if (observer !== null) return;
           const settle = (element) => {
@@ -273,6 +285,9 @@ window.__ModuleLoader__.load({
           });
           observer.observe(document.body, { childList: true, subtree: true });
           window.addEventListener('resize', onResize);
+          document.addEventListener('pointerdown', scheduleClampAll, true);
+          document.addEventListener('keydown', scheduleClampAll, true);
+          document.addEventListener('pointerup', scheduleClampAll, true);
         };
 
         const stopWatch = () => {
@@ -280,9 +295,17 @@ window.__ModuleLoader__.load({
             observer.disconnect();
             observer = null;
           }
+          if (clampTimer !== null) {
+            clearTimeout(clampTimer);
+            clampTimer = null;
+          }
           window.removeEventListener('resize', onResize);
-          for (const element of document.querySelectorAll('[data-dsh-rtl-clamp="applied"]')) {
+          document.removeEventListener('pointerdown', scheduleClampAll, true);
+          document.removeEventListener('keydown', scheduleClampAll, true);
+          document.removeEventListener('pointerup', scheduleClampAll, true);
+          for (const element of document.querySelectorAll('[data-dsh-rtl-clamp]')) {
             element.style.removeProperty('transform');
+            element.style.removeProperty('min-width');
             delete element.dataset.dshRtlClamp;
           }
         };
