@@ -362,6 +362,48 @@ window.__ModuleLoader__.load({
       'Delete workspace': 'حذف مساحة العمل',
       'Confirmed': 'مؤكّد',
       Confirmation: 'تأكيد',
+
+      // --- sidebar / workspace browser -------------------------------------
+      Workspaces: 'مساحات العمل',
+      'Automation tasks': 'مهام الأتمتة',
+      'Creator mode': 'وضع الإنشاء',
+      Ungrouped: 'غير مجمّعة',
+      'Show {count} more sessions': 'عرض {count} جلسة أخرى',
+      'Show {count} more session': 'عرض {count} جلسة أخرى',
+      'Show {count} more': 'عرض {count} المزيد',
+      'New session': 'جلسة جديدة',
+      Preview: 'معاينة',
+      Search: 'بحث',
+      'Search sessions': 'بحث في الجلسات',
+
+      // --- account card -----------------------------------------------------
+      'Signed in to DeepSeek': 'مسجّل الدخول إلى DeepSeek',
+      'More account information': 'مزيد من معلومات الحساب',
+      'Account details are not available yet.': 'تفاصيل الحساب غير متاحة بعد.',
+      'Topped-up balance': 'الرصيد المشحون',
+      'Granted balance': 'الرصيد الممنوح',
+      'Top up': 'شحن',
+      'View usage': 'عرض الاستخدام',
+
+      // --- composer and reasoning ------------------------------------------
+      'Describe what you want to build, / commands, @ files or sessions':
+        'صف ما تريد بناءه، أو استخدم / للأوامر و@ للملفات أو الجلسات',
+      'Send behavior while busy': 'سلوك الإرسال أثناء الانشغال',
+      'What Enter and the Send button do while the agent is running; Cmd/Ctrl+Enter uses the other behavior':
+        'ما يفعله مفتاح Enter وزر الإرسال أثناء تشغيل الوكيل؛ وCmd/Ctrl+Enter يستخدم السلوك الآخر',
+      Queue: 'قائمة الانتظار',
+      Steer: 'توجيه',
+      High: 'عالي',
+      Medium: 'متوسط',
+      Low: 'منخفض',
+      Off: 'متوقف',
+
+      // --- privacy / misc ---------------------------------------------------
+      'Upload Session Log when using the official model API':
+        'رفع سجل الجلسة عند استخدام واجهة النموذج الرسمية',
+      'Help improve DeepSeek models and products': 'ساعد في تحسين نماذج ومنتجات DeepSeek',
+      'Version {version}': 'الإصدار {version}',
+      'Current version: {version}': 'الإصدار الحالي: {version}',
     };
 
     /** Minimal explicit dictionary used only when the runtime scan is unavailable. */

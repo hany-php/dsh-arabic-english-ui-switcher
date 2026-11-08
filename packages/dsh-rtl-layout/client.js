@@ -53,6 +53,35 @@ window.__ModuleLoader__.load({
       '[dir="rtl"] a[href] {',
       '  unicode-bidi: isolate;',
       '}',
+      // Text blocks: derive the paragraph direction from the first strong
+      // character, so English sentences inside the RTL shell keep their
+      // punctuation on the correct side (".text" vs "text.").
+      '[dir="rtl"] :where(p, li, dt, dd, td, th, label, small, strong, em, figcaption, summary, blockquote, caption, div, span) {',
+      '  unicode-bidi: plaintext;',
+      '}',
+      // LTR-only idioms: auto margins are physical, so mirror the group to the
+      // opposite edge in RTL.
+      '[dir="rtl"] [style*="margin-left: auto"],',
+      '[dir="rtl"] [style*="margin-left:auto"] {',
+      '  margin-left: 0 !important;',
+      '  margin-right: auto !important;',
+      '}',
+      '[dir="rtl"] [style*="margin-right: auto"],',
+      '[dir="rtl"] [style*="margin-right:auto"] {',
+      '  margin-right: 0 !important;',
+      '  margin-left: auto !important;',
+      '}',
+      '[dir="rtl"] [class*="_rowActions"],',
+      '[dir="rtl"] [class*="_headerActions"],',
+      '[dir="rtl"] [class*="_footerActions"] {',
+      '  margin-left: 0 !important;',
+      '  margin-right: auto !important;',
+      '}',
+      // Composer placeholder is positioned with physical insets; mirror it.
+      // (Class hash comes from DSH 0.2.2-rc.1; guarded by the attribute match.)
+      '[dir="rtl"] [class*="GRgSLq_placeholder"] {',
+      '  inset: 4px 14px auto 8px !important;',
+      '}',
       // Slightly looser leading for Arabic script.
       '[dir="rtl"] body {',
       '  line-height: 1.7;',
