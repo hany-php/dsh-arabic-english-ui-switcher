@@ -52,3 +52,13 @@ Every fix below was measured in the running app before being applied; see
 **Fullscreen right sidebar:** covers the content area by design (DSH behaviour);
 the main sidebar remains visible, matching the English layout.
 
+## 6. Phase 3 note (translation expansion)
+
+Phase 3 changed copy only and added **no** direction rules; the inventory in
+`AGENTS.md` §9 still matches the shipped CSS exactly. One Arabic-specific risk to
+watch in the user visual checklist: Arabic strings are often longer than their
+English source, which can wrap buttons, menu items, badges and table headers.
+If that is observed, measure the element first and scope a `[dir="rtl"]`-only
+rule to the structural anchor (never a bare primitive class), then add it to the
+§9 table. Do not pre-emptively shrink or truncate Arabic text globally.
+

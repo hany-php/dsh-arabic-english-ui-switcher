@@ -18,9 +18,11 @@ Two independent DeepSeek Harness (DSH) browser bundles that add:
 Both are presentation-only. They never touch session content, model requests,
 tools, `app.asar`, or native modules.
 
-**Status (2026-11-08):** Phase 1 and Phase 2 are implemented and installed in the
-`desktop` profile; Phase 3 (wider translation coverage and visual polish) is the
-next open work item.
+**Status (2026-11-08):** Phase 1, Phase 2 and Phase 3 are implemented and
+installed in the `desktop` profile. Phase 3 replaced the hand-written coverage
+list with a generated dictionary harvest from `app.asar` and expanded Arabic
+coverage to every mounted client bundle (1,650 new entries). Phase 4
+(documentation, visual checklist, tagged release) is the next open work item.
 
 ---
 
@@ -57,9 +59,19 @@ packages/
     package.json / cordis.patch.yml / index.js (same shape)
     client.js           direction follows the active locale + LTR islands
 tools/
-  extract-locale-corpus.cjs   reads app.asar as a buffer, harvests English UI strings
-  locale-en-corpus.json       1738 unique English strings found in 0.2.2-rc.1
-  locale-dicts-settings.json  extracted settings-area dictionaries (key -> English)
+  asar-util.cjs               read-only asar list/read/grep (header parser)
+  extract-locale-corpus.cjs   harvests every English dictionary literal from app.asar
+  locale-en-corpus.json       2936 unique English strings found in 0.2.2-rc.1
+  locale-dicts-all.json       per-bundle English dictionaries (key -> English)
+  locale-dicts-settings.json  Phase 1 settings-area extract (kept for reference)
+  loaded-bundles.cjs          which client bundles the desktop profile mounts
+  ar-keys.cjs                 reads AR_CORE + AR_PHASE3 keys with the runtime rule
+  locale-coverage.cjs         coverage report (mounted bundles by default, --all)
+  locale-batch.cjs            splits missing strings into balanced translation batches
+  check-translation-part.cjs  validates one translated batch
+  apply-translations.cjs      regenerates the AR_PHASE3 block in client.js
+  test-locale-client.cjs      offline integration test for the client half
+  scan-css-physical-props.cjs CSS audit helper from Phase 2
 ```
 
 ---
@@ -96,10 +108,13 @@ tools/
 
 ## 5. How the locale plugin works (the part you will edit most)
 
-`packages/dsh-arabic-locale/client.js` contains one table:
+`packages/dsh-arabic-locale/client.js` keeps two tables, merged into one lookup
+table at activation:
 
 ```js
-const AR = { "English source text": "النص العربي", ... };
+const AR_CORE = { "English source text": "النص العربي", ... };   // hand-curated
+const AR_PHASE3 = { "Other English": "ترجمة", ... };             // generated, do not edit
+const AR = Object.assign({}, AR_CORE, AR_PHASE3);
 ```
 
 Keys are the **exact English values** shown by the shipped dictionaries — not the
@@ -122,10 +137,15 @@ At activation the client:
 ### Adding translations
 1. Find the exact English string (UI screenshot, or extract it with
    `tools/extract-locale-corpus.cjs` after a DSH update).
-2. Add `"Exact English": "الترجمة"` to `AR`.
-3. Keep placeholders (`{version}`, `{count}`, …) verbatim.
-4. Mind trailing spaces and punctuation: the key must match byte-for-byte.
-5. Reinstall the bundle (remove then install) and ask the user to reload.
+2. For a one-off correction add `"Exact English": "الترجمة"` to **`AR_CORE`**.
+3. For a coverage pass use the generated pipeline instead:
+   `extract-locale-corpus.cjs` → `locale-coverage.cjs` → `locale-batch.cjs` →
+   translate the batches → `check-translation-part.cjs` → `apply-translations.cjs`.
+   The generator rewrites only the block between the `PHASE3-AR` markers, so
+   never hand-edit `AR_PHASE3`.
+4. Keep placeholders (`{version}`, `{count}`, …) verbatim.
+5. Mind trailing spaces and punctuation: the key must match byte-for-byte.
+6. Reinstall the bundle (remove then install) and ask the user to reload.
 
 ### Rules for Arabic copy
 Short, natural Modern Standard Arabic. Do not translate identifiers, API field
@@ -172,15 +192,19 @@ Evidence before claiming success:
 3. `cordis_inspect_query` (host `Config.listConfigs`, `name: "<package>"`) → row
    `include:<row id>` present.
 4. `node --check` passes for every `index.js` / `client.js`.
-5. The **user** confirms the visual checklist. Installation alone is not proof.
+5. `node tools/locale-coverage.cjs` shows no *human-readable* mounted string left
+   untranslated (technical tokens are expected and listed in `docs/INVENTORY.md`).
+6. The **user** confirms the visual checklist. Installation alone is not proof.
 
 ---
 
 ## 8. Tooling gotchas
 
 - `grep`, `glob`, and shell commands **cannot read inside `app.asar`** (native
-  tools fail with "path not found"). Use the `read` tool, or read the archive as
-  a byte buffer in Node (see `tools/extract-locale-corpus.js`).
+  tools fail with "path not found"). The `read` tool does work for known paths
+  (e.g. `<app>\resources\app.asar\dsh\desktop-runtime.json`); for discovery use
+  `tools/asar-util.cjs` (`list` / `read` / `grep`), which parses the archive
+  header directly instead of loading the 300 MB buffer.
 - `ctx.locale.register(ns, locale, dict)` **throws** if `(ns, locale)` is already
   registered. Always check `locales.has('ar')` first.
 - `addLanguage` **throws** if the id is taken, the label is empty, or the fallback
@@ -217,6 +241,9 @@ Evidence before claiming success:
 
 Every rule below is scoped to `[dir="rtl"]` unless stated; the splitter sheet is
 direction-independent on purpose. Keep this table in sync when you add a rule.
+Phase 3 (translation expansion) added **no** CSS rules: nothing below is new
+since Phase 2, and any future visual fix must be measured in the running app
+before it is added.
 
 | Selector | Why |
 |---|---|

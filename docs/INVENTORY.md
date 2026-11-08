@@ -1,9 +1,9 @@
 # Translation Inventory & Coverage Plan
 
-> Generated in Phase 0 and extended in Phase 1 after extracting the shipped
-> dictionaries directly from `app.asar` (DSH 0.2.2-rc.1).
+> Generated in Phase 0, extended in Phase 1, and replaced by the Phase 3
+> dictionary harvest from `app.asar` (DSH 0.2.2-rc.1).
 > Raw English corpus: [`tools/locale-en-corpus.json`](../tools/locale-en-corpus.json).
-> Settings-area dictionaries: [`tools/locale-dicts-settings.json`](../tools/locale-dicts-settings.json).
+> Full per-bundle dictionaries: [`tools/locale-dicts-all.json`](../tools/locale-dicts-all.json).
 
 ## 1. How the locale service resolves a key
 
@@ -15,7 +15,31 @@ language's fallback chain inside the entry namespace, then repeats it in the
 - Adding `ar` to a namespace requires the namespace's own English dictionary,
   because English is resolved *inside* that namespace before `common` is tried.
 
-## 2. Namespaces discovered in 0.2.2-rc.1
+## 2. Where the English strings come from
+
+Each client package embeds its dictionaries in `lib/client.js` as
+`const en = { ... }` object literals (with `zh` / `ja` / `es` / … siblings).
+Native tools cannot read inside `app.asar`, so Phase 3 added a read-only asar
+inspector and a dictionary harvester:
+
+| Tool | Role |
+|---|---|
+| [`tools/asar-util.cjs`](../tools/asar-util.cjs) | Read-only asar list/read/grep (header parser, no extraction to disk) |
+| [`tools/extract-locale-corpus.cjs`](../tools/extract-locale-corpus.cjs) | Harvest every English dictionary literal → corpus + per-bundle dictionaries |
+| [`tools/loaded-bundles.cjs`](../tools/loaded-bundles.cjs) | Which client bundles the enabled bundle patches actually mount |
+| [`tools/ar-keys.cjs`](../tools/ar-keys.cjs) | Read the `AR_CORE` + `AR_PHASE3` keys with the runtime lookup rule |
+| [`tools/locale-coverage.cjs`](../tools/locale-coverage.cjs) | Coverage report (mounted bundles by default, `--all` for every shipped bundle) |
+| [`tools/locale-batch.cjs`](../tools/locale-batch.cjs) | Split missing strings into balanced per-area translation batches |
+| [`tools/check-translation-part.cjs`](../tools/check-translation-part.cjs) | Validate one batch (placeholders, whitespace, BOM/zero-width, coverage) |
+| [`tools/apply-translations.cjs`](../tools/apply-translations.cjs) | Regenerate the `AR_PHASE3` block in the client bundle |
+| [`tools/test-locale-client.cjs`](../tools/test-locale-client.cjs) | Offline integration test of the real client half against a stub locale service |
+
+Harvest result for 0.2.2-rc.1: **85 client bundles scanned, 62 carry English
+dictionaries, 2,936 unique English values**. The current desktop profile mounts
+52 of those bundles (**2,077 unique values**); the other 10 bundles are not
+mounted and stay English until they are.
+
+## 3. Namespaces discovered in 0.2.2-rc.1
 
 | Namespace | Owner | Notes |
 |---|---|---|
@@ -28,38 +52,101 @@ language's fallback chain inside the entry namespace, then repeats it in the
 | `_` (shortcuts) | `dsh-client-ui-shortcuts` | Recorder, reset, platform help |
 | `_` (plugins) | `dsh-client-ui-plugin-manager` | Install/update flows, component states, registries |
 | `_` (chat/work details) | `dsh-client-ui-chat` | Step process texts, turn usage, compaction, retries |
+| `_` (conversation/trajectory) | `dsh-client-ui-conversation`, `dsh-client-ui-trajectory` | Tool cards, detail fields, timeline, usage tables |
 | `_` (agent presets) | `dsh-client-ui-agent-preset` | Preset roster and picker |
 | `actionCards`, `contextMenu`, `documentHtml`, `documentMarkdown`, `entryCustomization`, `fileActions`, `fileDrag`, `job`, `shortcuts.layout`, `sidebarExcel`, `sidebarImage`, `sidebarOffice`, `sidebarPdf`, `inspectorPanel`, `creationRecommendations`, `pluginRecommendations` | various | Smaller feature namespaces |
 
 `_` means the package registers its dictionaries through a module-local constant,
-so the exact namespace string is not statically discoverable; the Phase 1
-implementation therefore translates by **English source string** at runtime and
-does not depend on namespace names at all.
+so the exact namespace string is not statically discoverable; the client half
+therefore translates by **English source string** at runtime and does not depend
+on namespace names at all.
 
-## 3. Phase 1 coverage (implemented)
+## 4. Implementation
 
-The bundle ships a single `English → Arabic` table (`AR` in
-[`packages/dsh-arabic-locale/client.js`](../packages/dsh-arabic-locale/client.js))
-covering the Settings surface plus shared vocabulary:
+`packages/dsh-arabic-locale/client.js` keeps two literals:
 
-- shared/common actions (OK, cancel, copy, save, search, delete, retry…)
-- settings shell (title, nav, connection state, desktop update)
-- appearance and font settings
-- permission presets and the full-access confirmation
-- keyboard shortcuts panel
-- models/account settings (providers, API keys, reasoning levels)
-- plugin manager (install/update states, components, registries)
-- chat work details, step-process texts, turn usage, compaction
-- workspace/session basics
+- **`AR_CORE`** — hand-curated table from Phases 1–2 (375 keys): shared actions,
+  settings shell, appearance/fonts, permissions, shortcuts, models/account,
+  plugin manager, chat work details, command menu, session menu, account card.
+- **`AR_PHASE3`** — generated coverage expansion (1,650 keys), grouped by UI
+  area, regenerated by `tools/apply-translations.cjs` and never edited by hand.
 
-Runtime behaviour: the client half scans every registered namespace, maps its
-English values through the table, and registers the result for `ar`. Namespaces
-with no known strings are skipped, so they keep falling back to English.
+At activation the client merges both (`const AR = Object.assign({}, AR_CORE,
+AR_PHASE3)`), scans every registered namespace, maps each English value through
+`AR`, and registers the result for `ar`. Values missing from the table fall back
+to English through the locale service — the intended, safe failure mode.
 
-## 4. Remaining gaps (Phase 3)
+## 5. Phase 3 coverage result
 
-- Long-form help paragraphs and error details not yet in the table.
-- Tool-call cards for individual tools (bash, read, edit, grep…).
-- Agent preset descriptions and plugin README content (data, not UI keys).
-- Any string added by a future DSH release stays English until translated —
-  that is the intended, visible-by-default failure mode.
+Batch sizes and merged counts by area:
+
+| Area | Batch strings | Merged (new AR keys) |
+|---|---|---|
+| chat-and-conversation | 378 | 367 |
+| plugins-and-commands | 308 | 305 |
+| trajectory-agent-and-plan | 275 | 261 |
+| schedule-workspace-and-jobs | 312 | 307 |
+| settings-and-shortcuts | 268 | 259 |
+| sidebar-and-tools | 156 | 151 |
+| **Total** | **1,697** | **1,650** |
+
+Mounted coverage after the merge: **1,997 / 2,077 unique English values
+(96.1 %)**. The remaining **80 are intentionally English** — they are technical
+tokens, not prose:
+
+- 33 identifiers/commands/units kept Latin by design: `Read`, `Write`, `Bash`,
+  `Pwsh`, `Grep`, `Glob`, `Fetch`, `Code`, `SYSTEM`, `USER`, `TOOL`, `JSON`,
+  `HTTP`, `ID`, `IN`, `OUT`, `TTFT`, slash-command tokens (`goal`, `plan`, …),
+  `en`, `px`, `s`, `Finder`, package/path examples.
+- 47 format/technical strings whose translation equals the source: duration
+  templates (`{count} d`, `{hours}h {minutes}m`, `~{months}mo`, `{value} ms`),
+  placeholder-only templates (`{name}`, `{url}`, `{percent}%`), date/version
+  formats (`{y}-{m}-{d}`, `v{version}`), URLs, protocol names
+  (`Anthropic Messages`, `OpenAI Chat Completions`, `OpenAI Responses`), and the
+  `Tab` key.
+
+An independent QA pass over all 1,650 entries found 23 wording issues (1 high,
+4 medium, 18 low) — for example, "compress" rendered as «اضغط» (press) in an
+image-upload error. All 23 were fixed before the final merge, and the merge is
+guarded by the offline client test (`tools/test-locale-client.cjs`).
+
+## 6. Remaining gaps
+
+- **Not-mounted bundles (10)**: `ui-action-cards`, `ui-creation-recommendations`,
+  `ui-plugin-market`, `ui-plugin-recommendations`,
+  `experimental-client-ui-cot-translation`, `experimental-client-ui-forge`,
+  `experimental-client-ui-stats`, `experimental-client-ui-voice-input`,
+  `experimental-liveshare`, `experimental-session-inspector`. Their 859
+  unique values stay English until the corresponding bundle is enabled; then
+  rerun the pipeline below.
+- **Data, not UI keys**: Agent preset descriptions, plugin README content,
+  session titles and conversation content are data and out of scope.
+- **Future DSH releases**: new strings stay English until the corpus is
+  re-harvested and translated — that is the intended, visible-by-default
+  failure mode.
+
+## 7. Re-running the pipeline after a DSH update
+
+```powershell
+$node = 'C:\Users\hany_\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe'
+
+# 1. Re-harvest the shipped dictionaries and report coverage
+& $node tools/extract-locale-corpus.cjs
+& $node tools/locale-coverage.cjs
+
+# 2. Split the mounted-bundle gaps into balanced batches under .work/
+& $node tools/locale-batch.cjs
+
+# 3. Translate .work/part-N.json -> .work/out-N.json, then validate each pair
+& $node tools/check-translation-part.cjs .work/part-1.json .work/out-1.json
+
+# 4. Regenerate the AR_PHASE3 block and reinstall the bundle
+& $node tools/apply-translations.cjs
+& $node --check packages/dsh-arabic-locale/client.js
+
+# 5. Verify the client contract offline (no browser needed)
+& $node tools/test-locale-client.cjs
+```
+
+The client bundle must be reinstalled through `plugin_manager` (remove then
+install) and the page reloaded (Ctrl+R) before the new strings appear.

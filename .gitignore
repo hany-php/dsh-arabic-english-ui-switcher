@@ -20,3 +20,5 @@ desktop.ini
 # Scratch files
 *.tmp
 *.bak
+.tmp/
+.work/
