@@ -211,23 +211,25 @@ window.__ModuleLoader__.load({
       if (!(element instanceof HTMLElement)) return;
       if (!element.matches('[role="menu"], [role="dialog"]')) return;
       if (element.getClientRects().length === 0) return;
-      if (element.dataset.dshRtlClamp === 'none') return;
       const rect = element.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      let dx = 0;
-      if (rect.left < VIEWPORT_MARGIN) dx = VIEWPORT_MARGIN - rect.left;
-      else if (rect.right > viewportWidth - VIEWPORT_MARGIN) dx = viewportWidth - VIEWPORT_MARGIN - rect.right;
-      let dy = 0;
-      if (rect.bottom > viewportHeight - VIEWPORT_MARGIN) dy = viewportHeight - VIEWPORT_MARGIN - rect.bottom;
-      if (dx === 0 && dy === 0) {
-        element.dataset.dshRtlClamp = 'none';
-        element.style.removeProperty('transform');
-        return;
+      // A menu whose content is wider than its box clips its own labels (the
+      // anchored max-width is computed for the LTR side). Widen it to its
+      // content, capped by the viewport, before measuring the position.
+      const maxWidth = window.innerWidth - 2 * VIEWPORT_MARGIN;
+      if (element.scrollWidth > rect.width + 1) {
+        element.style.setProperty('min-width', `${Math.min(element.scrollWidth, maxWidth)}px`, 'important');
       }
-      element.dataset.dshRtlClamp = 'applied';
-      element.style.setProperty('transform', `translate(${Math.round(dx)}px, ${Math.round(dy)}px)`, 'important');
+      const box = element.getBoundingClientRect();
+      let dx = 0;
+      if (box.left < VIEWPORT_MARGIN) dx = VIEWPORT_MARGIN - box.left;
+      else if (box.right > window.innerWidth - VIEWPORT_MARGIN) dx = window.innerWidth - VIEWPORT_MARGIN - box.right;
+      let dy = 0;
+      if (box.bottom > window.innerHeight - VIEWPORT_MARGIN) dy = window.innerHeight - VIEWPORT_MARGIN - box.bottom;
+      if (dx !== 0 || dy !== 0) {
+        element.dataset.dshRtlClamp = 'applied';
+        element.style.setProperty('transform', `translate(${Math.round(dx)}px, ${Math.round(dy)}px)`, 'important');
+      }
     }
 
     /** Clamp every popup currently mounted. */
@@ -251,16 +253,21 @@ window.__ModuleLoader__.load({
 
         const startWatch = () => {
           if (observer !== null) return;
+          const settle = (element) => {
+            clampPopup(element);
+            requestAnimationFrame(() => clampPopup(element));
+            setTimeout(() => clampPopup(element), 120);
+          };
           observer = new MutationObserver((records) => {
             for (const record of records) {
               for (const node of record.addedNodes) {
                 if (!(node instanceof HTMLElement)) continue;
                 if (node.matches('[role="menu"], [role="dialog"]')) {
-                  requestAnimationFrame(() => clampPopup(node));
+                  requestAnimationFrame(() => settle(node));
                   continue;
                 }
                 const inner = node.querySelectorAll('[role="menu"], [role="dialog"]');
-                if (inner.length > 0) requestAnimationFrame(() => inner.forEach(clampPopup));
+                if (inner.length > 0) requestAnimationFrame(() => inner.forEach(settle));
               }
             }
           });
