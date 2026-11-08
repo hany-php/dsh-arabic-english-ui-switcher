@@ -1,0 +1,3 @@
+- insert:
+    - id: dsh-rtl-layout
+      name: '@local/dsh-rtl-layout'

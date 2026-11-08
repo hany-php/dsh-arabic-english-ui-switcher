@@ -1,0 +1,3 @@
+- insert:
+    - id: dsh-arabic-locale
+      name: '@local/dsh-arabic-locale'
