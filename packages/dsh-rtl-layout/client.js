@@ -134,24 +134,19 @@ window.__ModuleLoader__.load({
       '  margin-right: auto !important;',
       '}',
       // --- Menu primitives (dropdowns, context menus) ------------------------
-      // `_alignEnd` pins a menu to the anchor's right edge with physical
-      // properties; in RTL it must anchor to the left instead. Scope these rules
-      // to `[role="menu"]` only: the same primitive classes are used by panels
-      // and popovers, and a broader selector moved them off-screen.
-      'html[dir="rtl"] [role="menu"][class*="_alignEnd"],',
-      'html[dir="rtl"] [role="menu"][class*="_list"] {',
-      '  left: 0 !important;',
-      '  right: auto !important;',
-      '}',
+      // NOTE: menu placement is intentionally NOT overridden. DSH anchors each
+      // menu to its trigger with physical `left`/`right` rules; forcing them
+      // detached popovers from their triggers (language picker, account card,
+      // session menu). `keepMenusInViewport()` below nudges an overflowing menu
+      // back inside the screen instead.
       // Menu rows hardcode `text-align: left`.
       '[dir="rtl"] [role="menuitem"] {',
       '  text-align: start !important;',
       '}',
       // The menu width comes from `--dsh-anchored-max-width`, computed for the
       // LTR anchor side; in RTL it can collapse far below the content width and
-      // clip every label. Size RTL menus to their content instead.
+      // clip every label.
       '[dir="rtl"] [role="menu"][class*="_list"] {',
-      '  width: max-content !important;',
       '  min-width: min(160px, calc(100vw - 24px)) !important;',
       '  max-width: min(360px, calc(100vw - 24px)) !important;',
       '}',
@@ -181,6 +176,43 @@ window.__ModuleLoader__.load({
       };
     }
 
+    /** Margin kept between a popup and the viewport edge. */
+    const VIEWPORT_MARGIN = 8;
+
+    /**
+     * Nudge one popup back inside the viewport when its anchoring puts it past
+     * an edge. Position is owned by DSH; this only adds a translate when the
+     * measured box overflows, so ordinary menus keep the shipped placement.
+     * @param element - candidate popup.
+     */
+    function clampPopup(element) {
+      if (!(element instanceof HTMLElement)) return;
+      if (!element.matches('[role="menu"], [role="dialog"]')) return;
+      if (element.getClientRects().length === 0) return;
+      if (element.dataset.dshRtlClamp === 'none') return;
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      let dx = 0;
+      if (rect.left < VIEWPORT_MARGIN) dx = VIEWPORT_MARGIN - rect.left;
+      else if (rect.right > viewportWidth - VIEWPORT_MARGIN) dx = viewportWidth - VIEWPORT_MARGIN - rect.right;
+      let dy = 0;
+      if (rect.bottom > viewportHeight - VIEWPORT_MARGIN) dy = viewportHeight - VIEWPORT_MARGIN - rect.bottom;
+      if (dx === 0 && dy === 0) {
+        element.dataset.dshRtlClamp = 'none';
+        element.style.removeProperty('transform');
+        return;
+      }
+      element.dataset.dshRtlClamp = 'applied';
+      element.style.setProperty('transform', `translate(${Math.round(dx)}px, ${Math.round(dy)}px)`, 'important');
+    }
+
+    /** Clamp every popup currently mounted. */
+    function clampAll() {
+      for (const element of document.querySelectorAll('[role="menu"], [role="dialog"]')) clampPopup(element);
+    }
+
     return {
       inject: ['locale'],
       apply(ctx) {
@@ -191,6 +223,40 @@ window.__ModuleLoader__.load({
         const originalDir = root.getAttribute('dir');
         const originalLang = root.getAttribute('lang');
         let applied = false;
+        let observer = null;
+
+        const onResize = () => clampAll();
+
+        const startWatch = () => {
+          if (observer !== null) return;
+          observer = new MutationObserver((records) => {
+            for (const record of records) {
+              for (const node of record.addedNodes) {
+                if (!(node instanceof HTMLElement)) continue;
+                if (node.matches('[role="menu"], [role="dialog"]')) {
+                  requestAnimationFrame(() => clampPopup(node));
+                  continue;
+                }
+                const inner = node.querySelectorAll('[role="menu"], [role="dialog"]');
+                if (inner.length > 0) requestAnimationFrame(() => inner.forEach(clampPopup));
+              }
+            }
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
+          window.addEventListener('resize', onResize);
+        };
+
+        const stopWatch = () => {
+          if (observer !== null) {
+            observer.disconnect();
+            observer = null;
+          }
+          window.removeEventListener('resize', onResize);
+          for (const element of document.querySelectorAll('[data-dsh-rtl-clamp="applied"]')) {
+            element.style.removeProperty('transform');
+            delete element.dataset.dshRtlClamp;
+          }
+        };
 
         const enable = () => {
           if (applied) return;
@@ -198,10 +264,12 @@ window.__ModuleLoader__.load({
           root.setAttribute('lang', 'ar');
           root.setAttribute(ROOT_FLAG, 'on');
           applied = true;
+          startWatch();
         };
 
         const disable = () => {
           if (!applied) return;
+          stopWatch();
           if (originalDir === null) root.removeAttribute('dir');
           else root.setAttribute('dir', originalDir);
           if (originalLang === null) root.removeAttribute('lang');
