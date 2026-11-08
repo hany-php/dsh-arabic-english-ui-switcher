@@ -433,6 +433,20 @@ window.__ModuleLoader__.load({
       '/{command} matches': 'مطابقات /{command}',
       '/{command} does not accept attachments; remove them first':
         '/{command} لا يقبل المرفقات؛ أزلها أولًا',
+
+      // --- session menu / export -------------------------------------------
+      'Copy Session as Markdown': 'نسخ الجلسة بصيغة Markdown',
+      'Download session log': 'تنزيل سجل الجلسة',
+      'More actions': 'مزيد من الإجراءات',
+      'Session copied as Markdown.': 'تم نسخ الجلسة بصيغة Markdown.',
+      'Fork session': 'إنشاء تفريعة للجلسة',
+      'Unarchive session': 'إلغاء أرشفة الجلسة',
+      'Pin session': 'تثبيت الجلسة',
+      'Unpin session': 'إلغاء تثبيت الجلسة',
+      'Copy Session ID': 'نسخ معرّف الجلسة',
+      'Session ID copied': 'تم نسخ معرّف الجلسة',
+      'Copy failed. Try again.': 'فشل النسخ. حاول مرة أخرى.',
+      'Session log downloaded': 'تم تنزيل سجل الجلسة',
     };
 
     /** Minimal explicit dictionary used only when the runtime scan is unavailable. */
