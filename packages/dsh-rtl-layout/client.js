@@ -192,6 +192,51 @@ window.__ModuleLoader__.load({
     const STYLE_ID = 'dsh-rtl-layout-css';
     const ROOT_FLAG = 'data-dsh-rtl';
 
+    /**
+     * Sidebar resize handles ship as invisible 8px hit areas. Make the splitter
+     * line visible and thicker so it can be found by eye, in both directions
+     * (this sheet is direction-independent by design).
+     */
+    const HANDLE_CSS = [
+      '[data-side="rightbar"],',
+      '[data-side="leftbar"] {',
+      '  position: absolute;',
+      '}',
+      '[data-side="rightbar"]::after,',
+      '[data-side="leftbar"]::after {',
+      '  content: "";',
+      '  position: absolute;',
+      '  top: 0;',
+      '  bottom: 0;',
+      '  left: 50%;',
+      '  width: 3px;',
+      '  transform: translateX(-50%);',
+      '  border-radius: 2px;',
+      '  background: var(--dsw-alias-border-l3, rgba(128, 128, 128, 0.55));',
+      '  transition: background-color 120ms ease, width 120ms ease;',
+      '  pointer-events: none;',
+      '}',
+      '[data-side="rightbar"]:hover::after,',
+      '[data-side="leftbar"]:hover::after,',
+      '[data-side="rightbar"]:active::after,',
+      '[data-side="leftbar"]:active::after {',
+      '  width: 4px;',
+      '  background: var(--dsw-alias-state-business-primary, #3b82f6);',
+      '}',
+    ].join('\n');
+
+    function ensureHandleStyle() {
+      if (typeof document === 'undefined') return () => {};
+      if (document.querySelector('style[data-dsh-handles]') !== null) return () => {};
+      const tag = document.createElement('style');
+      tag.dataset.dshHandles = 'on';
+      tag.textContent = HANDLE_CSS;
+      document.head.appendChild(tag);
+      return () => {
+        tag.remove();
+      };
+    }
+
     function ensureStyle() {
       if (typeof document === 'undefined') return () => {};
       if (document.querySelector('style[data-dsh-rtl-layout]') !== null) return () => {};
@@ -407,12 +452,14 @@ window.__ModuleLoader__.load({
 
         ctx.effect(() => {
           const removeStyle = ensureStyle();
+          const removeHandles = ensureHandleStyle();
           const unsubscribe = ctx.locale.subscribe(sync);
           sync();
           return () => {
             unsubscribe();
             disable();
             removeStyle();
+            removeHandles();
           };
         }, 'rtl layout: direction follows the active locale');
       },
